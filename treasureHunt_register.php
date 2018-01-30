@@ -12,7 +12,7 @@
 
 		$SQL = "SELECT username FROM users WHERE username = ?";
 		$types = "s";
-		$values = [$username];
+		$values = $username;
 		$matrix = $db->getData($SQL, $types, $values);
 
 		if(count($matrix) == 0) {

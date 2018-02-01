@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Värd: 127.0.0.1
--- Tid vid skapande: 26 jan 2018 kl 09:26
+-- Tid vid skapande: 01 feb 2018 kl 10:57
 -- Serverversion: 10.1.19-MariaDB
 -- PHP-version: 7.0.13
 
@@ -66,8 +66,9 @@ CREATE TABLE `challenge_category` (
 CREATE TABLE `gameroom` (
   `roomID` int(11) NOT NULL,
   `roomcode` varchar(8) NOT NULL,
-  `name` int(20) NOT NULL,
-  `creatorID` int(11) NOT NULL
+  `roomname` varchar(20) NOT NULL,
+  `creatorID` int(11) NOT NULL,
+  `gameOver` tinyint(1)NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -80,7 +81,7 @@ CREATE TABLE `hash` (
   `hashID` int(11) NOT NULL,
   `userID` int(11) NOT NULL,
   `loginTime` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `hasKey` varchar(32) NOT NULL
+  `hashkey` varchar(64) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -108,6 +109,21 @@ CREATE TABLE `users` (
   `password` varchar(100) NOT NULL,
   `firstName` varchar(50) NOT NULL,
   `lastName` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumpning av Data i tabell `users`
+
+-- --------------------------------------------------------
+
+--
+-- Tabellstruktur `user_room`
+--
+
+CREATE TABLE `user_room` (
+  `userRoomID` int(11) NOT NULL,
+  `userID` int(11) NOT NULL,
+  `roomID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
@@ -142,7 +158,6 @@ ALTER TABLE `challenge_category`
 --
 ALTER TABLE `gameroom`
   ADD PRIMARY KEY (`roomID`),
-  ADD UNIQUE KEY `UNIQUE` (`roomcode`),
   ADD KEY `creatorID` (`creatorID`);
 
 --
@@ -150,7 +165,7 @@ ALTER TABLE `gameroom`
 --
 ALTER TABLE `hash`
   ADD PRIMARY KEY (`hashID`),
-  ADD UNIQUE KEY `UNIQUE` (`hasKey`),
+  ADD UNIQUE KEY `UNIQUE` (`hashkey`),
   ADD KEY `userID` (`userID`);
 
 --
@@ -166,6 +181,14 @@ ALTER TABLE `location`
 ALTER TABLE `users`
   ADD PRIMARY KEY (`userID`),
   ADD UNIQUE KEY `username` (`username`);
+
+--
+-- Index för tabell `user_room`
+--
+ALTER TABLE `user_room`
+  ADD PRIMARY KEY (`userRoomID`),
+  ADD KEY `userID` (`userID`),
+  ADD KEY `roomID` (`roomID`);
 
 --
 -- AUTO_INCREMENT för dumpade tabeller
@@ -207,6 +230,11 @@ ALTER TABLE `location`
 ALTER TABLE `users`
   MODIFY `userID` int(11) NOT NULL AUTO_INCREMENT;
 --
+-- AUTO_INCREMENT för tabell `user_room`
+--
+ALTER TABLE `user_room`
+  MODIFY `userRoomID` int(11) NOT NULL AUTO_INCREMENT;
+--
 -- Restriktioner för dumpade tabeller
 --
 
@@ -240,6 +268,13 @@ ALTER TABLE `hash`
 --
 ALTER TABLE `location`
   ADD CONSTRAINT `location_ibfk_1` FOREIGN KEY (`creatorID`) REFERENCES `users` (`userID`);
+
+--
+-- Restriktioner för tabell `user_room`
+--
+ALTER TABLE `user_room`
+  ADD CONSTRAINT `user_room_ibfk_1` FOREIGN KEY (`userID`) REFERENCES `users` (`userID`),
+  ADD CONSTRAINT `user_room_ibfk_2` FOREIGN KEY (`roomID`) REFERENCES `gameroom` (`roomID`);
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

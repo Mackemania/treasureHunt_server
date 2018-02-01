@@ -32,8 +32,8 @@
 				}
 			}
 
-			$userID= $matrix[0][0];
-			$SQL = "INSERT INTO hash(userID, hashKey) VALUES(?, ?)";
+			$userID = $matrix[0][0];
+			$SQL = "INSERT INTO hash(userID, hashkey) VALUES(?, ?)";
 			$types= "is";
 			$params= [$userID, $hashkey];
 			$db->execute($SQL, $types, $params);

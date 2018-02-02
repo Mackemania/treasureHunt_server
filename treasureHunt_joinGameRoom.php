@@ -20,9 +20,9 @@
 
         if(count($matrix) == 1) {
 
-            $SQL = "SELECT roomID FROM gameroom WHERE roomname = ? AND roomcode = ? AND gameOver != ?";
+            $SQL = "SELECT roomID FROM gameroom WHERE roomname = ? AND roomcode = ? AND gameOver = ?";
             $types = "ssi";
-            $params = [$gameName, $gameCode, 1];
+            $params = [$gameName, $gameCode, 0];
 
             $matrix = $db->getData($SQL, $types, $params);
 

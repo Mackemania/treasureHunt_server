@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Värd: 127.0.0.1
--- Tid vid skapande: 01 feb 2018 kl 10:57
+-- Tid vid skapande: 07 feb 2018 kl 13:36
 -- Serverversion: 10.1.19-MariaDB
 -- PHP-version: 7.0.13
 
@@ -68,7 +68,31 @@ CREATE TABLE `gameroom` (
   `roomcode` varchar(8) NOT NULL,
   `roomname` varchar(20) NOT NULL,
   `creatorID` int(11) NOT NULL,
-  `gameOver` tinyint(1)NOT NULL
+  `gameOver` tinyint(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellstruktur `gameroom_challenge`
+--
+
+CREATE TABLE `gameroom_challenge` (
+  `roomChallengeID` int(11) NOT NULL,
+  `roomID` int(11) NOT NULL,
+  `challengeID` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellstruktur `gameroom_location`
+--
+
+CREATE TABLE `gameroom_location` (
+  `gameLocationID` int(11) NOT NULL,
+  `gameroomID` int(11) NOT NULL,
+  `locationID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 -- --------------------------------------------------------
@@ -97,6 +121,15 @@ CREATE TABLE `location` (
   `creatorID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+--
+-- Dumpning av Data i tabell `location`
+--
+
+INSERT INTO `location` (`locationID`, `latitude`, `longitude`, `creatorID`) VALUES
+(1, 58.39713731780648, 13.877248456701636, 1),
+(2, 58.39713731780648, 13.897248456701636, 1),
+(3, 58.397079, 13.87697, 1);
+
 -- --------------------------------------------------------
 
 --
@@ -113,6 +146,11 @@ CREATE TABLE `users` (
 
 --
 -- Dumpning av Data i tabell `users`
+--
+
+INSERT INTO `users` (`userID`, `username`, `password`, `firstName`, `lastName`) VALUES
+(1, 'Mackemania', 'Admin', 'M', 'M'),
+(2, 'a', 'a', 'a', 'a');
 
 -- --------------------------------------------------------
 
@@ -127,7 +165,7 @@ CREATE TABLE `user_room` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
--- Index för dumpade tabeller
+-- Dumpning av Data i tabell `user_room`
 --
 
 --
@@ -159,6 +197,23 @@ ALTER TABLE `challenge_category`
 ALTER TABLE `gameroom`
   ADD PRIMARY KEY (`roomID`),
   ADD KEY `creatorID` (`creatorID`);
+
+--
+-- Index för tabell `gameroom_challenge`
+--
+ALTER TABLE `gameroom_challenge`
+  ADD PRIMARY KEY (`roomChallengeID`),
+  ADD KEY `INDEX` (`challengeID`),
+  ADD KEY `roomID` (`roomID`),
+  ADD KEY `challengeID` (`challengeID`);
+
+--
+-- Index för tabell `gameroom_location`
+--
+ALTER TABLE `gameroom_location`
+  ADD PRIMARY KEY (`gameLocationID`),
+  ADD KEY `gameroomID` (`gameroomID`),
+  ADD KEY `locationID` (`locationID`);
 
 --
 -- Index för tabell `hash`
@@ -215,6 +270,16 @@ ALTER TABLE `challenge_category`
 ALTER TABLE `gameroom`
   MODIFY `roomID` int(11) NOT NULL AUTO_INCREMENT;
 --
+-- AUTO_INCREMENT för tabell `gameroom_challenge`
+--
+ALTER TABLE `gameroom_challenge`
+  MODIFY `roomChallengeID` int(11) NOT NULL AUTO_INCREMENT;
+--
+-- AUTO_INCREMENT för tabell `gameroom_location`
+--
+ALTER TABLE `gameroom_location`
+  MODIFY `gameLocationID` int(11) NOT NULL AUTO_INCREMENT;
+--
 -- AUTO_INCREMENT för tabell `hash`
 --
 ALTER TABLE `hash`
@@ -223,12 +288,12 @@ ALTER TABLE `hash`
 -- AUTO_INCREMENT för tabell `location`
 --
 ALTER TABLE `location`
-  MODIFY `locationID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `locationID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 --
 -- AUTO_INCREMENT för tabell `users`
 --
 ALTER TABLE `users`
-  MODIFY `userID` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `userID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 --
 -- AUTO_INCREMENT för tabell `user_room`
 --
@@ -256,6 +321,20 @@ ALTER TABLE `challenge_category`
 --
 ALTER TABLE `gameroom`
   ADD CONSTRAINT `gameroom_ibfk_1` FOREIGN KEY (`creatorID`) REFERENCES `users` (`userID`);
+
+--
+-- Restriktioner för tabell `gameroom_challenge`
+--
+ALTER TABLE `gameroom_challenge`
+  ADD CONSTRAINT `gameroom_challenge_ibfk_1` FOREIGN KEY (`roomID`) REFERENCES `gameroom` (`roomID`),
+  ADD CONSTRAINT `gameroom_challenge_ibfk_2` FOREIGN KEY (`challengeID`) REFERENCES `gameroom` (`roomID`);
+
+--
+-- Restriktioner för tabell `gameroom_location`
+--
+ALTER TABLE `gameroom_location`
+  ADD CONSTRAINT `gameroom_location_ibfk_1` FOREIGN KEY (`gameroomID`) REFERENCES `gameroom` (`roomID`),
+  ADD CONSTRAINT `gameroom_location_ibfk_2` FOREIGN KEY (`locationID`) REFERENCES `location` (`locationID`);
 
 --
 -- Restriktioner för tabell `hash`

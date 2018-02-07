@@ -1,66 +1,190 @@
 <?PHP
 
-    require_once("db.php");
+	require_once("db.php");
 
 
-    if(isset($_REQUEST["name"]) && isset($_REQUEST["code"]) && isset($_REQUEST["userID"]) && isset($_REQUEST["hashkey"])) {
+	if(isset($_REQUEST["name"]) && isset($_REQUEST["code"]) && isset($_REQUEST["location"]) && isset($_REQUEST["userID"]) && isset($_REQUEST["hashkey"])) {
 
-        $db = new DB("localhost", "root", "", "treasurehunt");
+		$numberOfchallenges = 10;
 
-        $gameName = $_REQUEST["name"];
-        $gameCode = $_REQUEST["code"];
-        $userID = $_REQUEST["userID"];
-        $hashkey = $_REQUEST["hashkey"];
+		$db = new DB("localhost", "root", "", "treasurehunt");
 
-        $SQL = "SELECT hashID FROM hash WHERE userID = ? AND hashkey = ?";
-        $types = "is";
-        $params = [$userID, $hashkey];
+		$gameName = $_REQUEST["name"];
+		$gameCode = $_REQUEST["code"];
+		$location = $_REQUEST["location"];
+		
+		$location = json_decode($location, TRUE);
+		$latitude = $location["latitude"];
+		$longitude = $location["longitude"];
 
-        $matrix = $db->getData($SQL, $types, $params);
+		$userID = $_REQUEST["userID"];
+		$hashkey = $_REQUEST["hashkey"];
 
-        if(count($matrix) == 1) {
+		$SQL = "SELECT hashID FROM hash WHERE userID = ? AND hashkey = ?";
+		$types = "is";
+		$params = [$userID, $hashkey];
 
-            $SQL = "INSERT INTO gameroom(roomcode, roomname, creatorID, gameOver) VALUES(?, ?, ?, ?)";
-            $types = "ssii";
-            $params = [$gameCode, $gameName, $userID, 0];
+		$matrix = $db->getData($SQL, $types, $params);
 
-            $db->execute($SQL, $types, $params);
+		if(count($matrix) == 1) {
 
-            $SQL = "SELECT roomID FROM gameroom WHERE roomcode = ? AND roomname = ?";
-            $types = "ss";
-            $params = [$gameCode, $gameName];
+			// 2/(cos(lat)*111.32) = 2km/ longgrad
+			// 2/(cos(long)*111.19) = 2km / latgrad
 
-            $matrix = $db->getData($SQL, $types, $params);
-            
-            if(count($matrix) == 1) {
+			$SQL = "INSERT INTO gameroom(roomcode, roomname, creatorID, gameOver) VALUES(?, ?, ?, ?)";
+			$types = "ssii";
+			$params = [$gameCode, $gameName, $userID, 0];
 
-                $roomID = $matrix[0][0];
+			$db->execute($SQL, $types, $params);
 
-                $json = [$roomID, 1];
-                $json = json_encode($json, JSON_FORCE_OBJECT);
+			$SQL = "SELECT roomID FROM gameroom WHERE roomcode = ? AND roomname = ? AND gameOver = ?";
+			$types = "ssi";
+			$params = [$gameCode, $gameName, 0];
 
-                echo($json);
+			$matrix = $db->getData($SQL, $types, $params);
 
-            } else {
+			//var_dump($matrix);
+			
+			if(count($matrix) == 1) {
 
-                echo("No gameroom created");
+				$roomID = $matrix[0][0];
 
-            }
-            
+				$longdifference = abs(2/((cos($latitude*(pi()/180)))*111.32));
+				$latdifference = abs(2/((cos($longitude*(pi()/180)))*111.19));
 
-        } else {
+				$longmin = $longitude-$longdifference;
+				$longmax = $longitude+$longdifference;
+				$latmin = $latitude-$latdifference;
+				$latmax = $latitude+$latdifference;
 
-            echo("No user found");
+				//echo($longmin." ".$longmax." ".$latmin." ".$latmax);
 
-        }
+				$SQL = "SELECT locationID, latitude, longitude FROM location WHERE latitude > ? AND latitude < ? AND longitude> ? AND longitude < ?";
+				$types = "dddd";
+				$params = [$latmin, $latmax, $longmin, $longmax];
+
+				$matrix = $db->getData($SQL, $types, $params);
+				
+				if(count($matrix) > 0) {
+
+					$locations = $matrix;
+
+					$SQL = "SELECT challengeID, name, description, needProps FROM challenge WHERE challengeID <> ?";
+					$types = "i";
+					$params = 0;
+
+					$matrix = $db->getData($SQL, $types, $params);
+
+					
+					//echo(count($matrix)."\n");
+					
+					if(count($matrix)>0) {
+
+						$challenges = $matrix;
+						
+						shuffle($challenges);
+						shuffle($locations);
+						
+						$locationsLength = count($locations);
+						$challengesLength = count($challenges);
+
+						if($locationsLength>$challengesLength) {
+
+							for($i = ($locationsLength-1); $i>=$challengesLength; $i--) {
+								
+								//echo("Removing ".$i."\n");
+								unset($locations[$i]);
+							
+							}
+
+						} else if($locationsLength<$challengesLength) {
+
+							for($i = ($challengesLength-1); $i>=$locationsLength; $i--) {
+								
+								unset($challenges[$i]);
+							
+							}
+
+						}
+
+						//var_dump($locations);
+
+						for($i = 0; $i<count($locations); $i++) {
+							
+							if($i<$numberOfchallenges) {
+								$locationID = $locations[$i][0];
+
+								//echo($locationID);
+
+								$SQL = "INSERT INTO gameroom_location(gameroomID, locationID) VALUES(?, ?)";
+								$types = "ii";
+								$params = [$roomID, $locationID];
+
+								$db->execute($SQL, $types, $params);
+							
+							} else {
+
+								unset($locations[$i]);
+
+							}
+						}
+
+						for($i = 0; $i<count($challenges); $i++) {
+
+							if($i<$numberOfchallenges) {
+								$challengeID = $challenges[$i][0];
+
+								//echo($locationID);
+
+								$SQL = "INSERT INTO gameroom_challenge(roomID, challengeID) VALUES(?, ?)";
+								$types = "ii";
+								$params = [$roomID, $challengeID];
+
+								$db->execute($SQL, $types, $params);
+							
+							} else {
+
+								unset($locations[$i]);
+
+							}
+						}
+					
+
+						$json = [$roomID, 1, $locations, $challenges];
+						$json = json_encode($json, JSON_FORCE_OBJECT);
+
+						echo($json);
 
 
-    } else {
+					} else {
 
-        echo("Missing arguments");
+						echo("No challenges found");
+					}
 
-    }
+				} else {
 
-    echo("Something went wrong");
+					echo("No locations found");
+
+				}
+
+			} else {
+
+				echo("No gameroom created");
+
+			}
+			
+
+		} else {
+
+			echo("No user found");
+
+		}
+
+
+	} else {
+
+		echo("Missing arguments");
+
+	}
 
 ?>

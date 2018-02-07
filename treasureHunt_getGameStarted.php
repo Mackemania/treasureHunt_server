@@ -19,21 +19,25 @@
 
 			$SQL = "SELECT gameOver FROM gameroom WHERE roomID = ?";
 			$types = "i";
-			$params = [$roomID];
+			$params = $roomID;
 
 			$matrix = $db->getData($SQL, $types, $params);
 
             if(count($matrix) == 1) {
-                
+				
                 if($matrix[0][0] == 1) {
-
-
                     
                     echo("1");
 
-                }
+                } else {
+
+					echo("Game not started");
+				}
                 
-            }
+            } else {
+
+				echo("Too many rooms");
+			}
             
 
 		} else {

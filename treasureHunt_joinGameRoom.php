@@ -29,8 +29,8 @@
 			if(count($matrix) == 1) {
 				
 				$roomID = $matrix[0][0];
-				$startLat = $matrix[1][0];
-				$startLong = $matrix[2][0];
+				$startLat = $matrix[0][1];
+				$startLong = $matrix[0][2];
 				
 				$SQL = "SELECT userRoomID FROM user_room WHERE roomID = ? AND userID = ?";
 				$types = "ii";
@@ -84,7 +84,7 @@
 									$temp = $db->getData($SQL, $types, $params);
 
 									$challenges[$i] = $temp[0];
-									echo($challenges[$i][3]);
+									//echo($challenges[$i][3]);
 								}
 
 								if(count($challenges) > 0) {

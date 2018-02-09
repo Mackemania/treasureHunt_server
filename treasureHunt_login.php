@@ -9,7 +9,7 @@
 		$user = $_REQUEST["username"];
 		$password = $_REQUEST["password"];
 
-		$SQL = "SELECT userID FROM users WHERE username=? AND BINARY password=?";
+		$SQL = "SELECT userID, username FROM users WHERE username=? AND BINARY password=?";
 		$types= "ss";
 		$params= [$user, $password];
 		$matrix = $db->getData($SQL, $types, $params);
@@ -33,12 +33,13 @@
 			}
 
 			$userID = $matrix[0][0];
+			$username = $matrix[0][1];
 			$SQL = "INSERT INTO hash(userID, hashkey) VALUES(?, ?)";
 			$types= "is";
 			$params= [$userID, $hashkey];
 			$db->execute($SQL, $types, $params);
 
-			$userHash= [$userID, $hashkey];
+			$userHash= [$userID, $hashkey, $username];
 			$userHash= json_encode($userHash, JSON_FORCE_OBJECT);
 			echo($userHash);
 		

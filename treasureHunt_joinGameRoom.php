@@ -20,7 +20,7 @@
 
 		if(count($matrix) == 1) {
 
-			$SQL = "SELECT roomID FROM gameroom WHERE roomname = ? AND roomcode = ? AND gameOver = ?";
+			$SQL = "SELECT roomID, startLat, startLong FROM gameroom WHERE roomname = ? AND roomcode = ? AND gameOver = ?";
 			$types = "ssi";
 			$params = [$gameName, $gameCode, 0];
 
@@ -29,84 +29,102 @@
 			if(count($matrix) == 1) {
 				
 				$roomID = $matrix[0][0];
-
-				$SQL = "SELECT locationID FROM gameroom_location WHERE gameroomID = ?";
-				$types  = "i";
-				$params = $roomID;
+				$startLat = $matrix[1][0];
+				$startLong = $matrix[2][0];
+				
+				$SQL = "SELECT userRoomID FROM user_room WHERE roomID = ? AND userID = ?";
+				$types = "ii";
+				$params = [$roomID, $userID];
 
 				$matrix = $db->getData($SQL, $types, $params);
 
-				if(count($matrix)>0) {
+				if(count($matrix) == 0) {
 
-					$locations = array();
+					$SQL = "SELECT locationID FROM gameroom_location WHERE gameroomID = ?";
+					$types  = "i";
+					$params = $roomID;
 
-					for($i = 0; $i<count($matrix); $i++) {
+					$matrix = $db->getData($SQL, $types, $params);
 
-						$SQL = "SELECT locationID, latitude, longitude FROM location WHERE locationID = ?";
-						$types = "i";
-						$params = $matrix[$i][0];
+					if(count($matrix)>0) {
 
-						$temp = $db->getData($SQL, $types, $params);
-						$locations[$i] = $temp[0];
+						$locations = array();
 
-					}
+						for($i = 0; $i<count($matrix); $i++) {
 
-					if(count($locations)>0) {
+							$SQL = "SELECT locationID, latitude, longitude FROM location WHERE locationID = ?";
+							$types = "i";
+							$params = $matrix[$i][0];
 
+							$temp = $db->getData($SQL, $types, $params);
+							$locations[$i] = $temp[0];
 
-						$SQL = "SELECT challengeID FROM gameroom_challenge WHERE roomID = ?";
-						$types = "i";
-						$params = $roomID;
+						}
 
-						$matrix = $db->getData($SQL, $types, $params);
-
-						if(count($matrix) > 0 ){
-
-							$challenges = array();
-
-							for($i = 0; $i<count($matrix); $i++) {
+						if(count($locations)>0) {
 
 
-								$SQL = "SELECT challengeID, name, description FROM challenge WHERE challengeID = ?";
-								$types = "i";
-								$params = $matrix[$i][0];
+							$SQL = "SELECT challengeID FROM gameroom_challenge WHERE roomID = ?";
+							$types = "i";
+							$params = $roomID;
 
-								$temp = $db->getData($SQL, $types, $params);
+							$matrix = $db->getData($SQL, $types, $params);
 
-								$challenges[$i] = $temp[0];
+							if(count($matrix) > 0 ){
 
-							}
+								$challenges = array();
 
-							if(count($challenges) > 0) {
+								for($i = 0; $i<count($matrix); $i++) {
 
-								$SQL = "INSERT INTO user_room(userID, roomID) VALUES(?, ?)";
-								$types = "ii";
-								$params = [$userID, $roomID];
 
-								$db->execute($SQL, $types, $params);
+									$SQL = "SELECT challengeID, name, description, answer FROM challenge WHERE challengeID = ?";
+									$types = "i";
+									$params = $matrix[$i][0];
 
-								$json = [$roomID, 1, $locations, $challenges];
-								$json = json_encode($json, JSON_FORCE_OBJECT);
-								echo($json);
+									$temp = $db->getData($SQL, $types, $params);
+
+									$challenges[$i] = $temp[0];
+									echo($challenges[$i][3]);
+								}
+
+								if(count($challenges) > 0) {
+
+									$SQL = "INSERT INTO user_room(userID, roomID) VALUES(?, ?)";
+									$types = "ii";
+									$params = [$userID, $roomID];
+
+									$db->execute($SQL, $types, $params);
+
+									$startLocation = [$startLat, $startLong];
+
+									$json = [$roomID, 1, $locations, $challenges, $startLocation];
+									$json = json_encode($json, JSON_FORCE_OBJECT);
+									echo($json);
+
+								} else {
+
+									echo("Challenges were corrupt");
+								}
 
 							} else {
 
-								echo("Challenges were corrupt");
+								echo("No challenges found!");
 							}
 
 						} else {
 
-							echo("No challenges found!");
+							echo("Locations were corrupt");
 						}
 
 					} else {
 
-						echo("Locations were corrupt");
+						echo("No locations found");
 					}
-
+				
 				} else {
 
-					echo("No locations found");
+					echo("User already joined");
+
 				}
 				
 			} else {

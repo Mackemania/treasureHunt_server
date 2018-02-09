@@ -31,9 +31,9 @@
 			// 2/(cos(lat)*111.32) = 2km/ longgrad
 			// 2/(cos(long)*111.19) = 2km / latgrad
 
-			$SQL = "INSERT INTO gameroom(roomcode, roomname, creatorID, gameOver) VALUES(?, ?, ?, ?)";
-			$types = "ssii";
-			$params = [$gameCode, $gameName, $userID, 0];
+			$SQL = "INSERT INTO gameroom(roomcode, roomname, creatorID, gameOver, startLat, startLong) VALUES(?, ?, ?, ?, ?, ?)";
+			$types = "ssiidd";
+			$params = [$gameCode, $gameName, $userID, 0, $latitude, $longitude];
 
 			$db->execute($SQL, $types, $params);
 
@@ -48,6 +48,12 @@
 			if(count($matrix) == 1) {
 
 				$roomID = $matrix[0][0];
+
+				$SQL = "INSERT INTO user_room(userID, roomID) VALUES(?, ?)";
+				$types = "ii";
+				$params = [$userID, $roomID];
+
+				$db->execute($SQL, $types, $params);
 
 				$longdifference = abs(2/((cos($latitude*(pi()/180)))*111.32));
 				$latdifference = abs(2/((cos($longitude*(pi()/180)))*111.19));
@@ -69,7 +75,7 @@
 
 					$locations = $matrix;
 
-					$SQL = "SELECT challengeID, name, description, needProps FROM challenge WHERE challengeID <> ?";
+					$SQL = "SELECT challengeID, name, description, answer FROM challenge WHERE challengeID <> ?";
 					$types = "i";
 					$params = 0;
 
